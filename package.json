@@ -1,0 +1,20 @@
+{
+  "name": "branch-compare",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Test isolated Git branches and ordered pairs, then inspect an offline comparison matrix.",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "bin": { "branch-compare": "dist/cli.js" },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --test-concurrency=1 tests/*.test.ts",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "26.6.4",
+    "typescript": "7.0.2"
+  }
+}
