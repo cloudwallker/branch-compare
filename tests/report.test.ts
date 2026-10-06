@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { renderReportHtml, reproduceCommand } from '../src/report.ts';
@@ -41,7 +41,7 @@ test('copied reproduction commands pass the real output boundary check from the 
     assert.equal(resolve(source, args.repo), source);
     assert.deepEqual(JSON.parse(await readFile(resolve(source, args.report), 'utf8')), JSON.parse(JSON.stringify(report)));
     const target = await ensureOutputLocation(resolve(source, args.out), [source, git]);
-    assert.equal(target, join(directory, 'replay-pair-0-1'));
+    assert.equal(target, join(await realpath(directory), 'replay-pair-0-1'));
   }
   await assert.rejects(ensureOutputLocation(join(source, 'replay-pair-0-1'), [source, git]), /outside the source repository/);
 });

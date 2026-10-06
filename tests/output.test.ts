@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp,mkdir,readFile,writeFile,rm,readdir,symlink } from 'node:fs/promises';
+import { mkdtemp,mkdir,readFile,writeFile,rm,readdir,symlink,realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ensureOutputLocation,writeArtifacts } from '../src/output.ts';
@@ -19,7 +19,7 @@ async function setup(){const root=await mkdtemp(join(tmpdir(),'branch-output-tes
 test('refuses to write into the source tree while allowing a new sibling directory',async()=>{
   const {root,source}=await setup();try {
     await assert.rejects(ensureOutputLocation(join(source,'reports'),[source]));
-    assert.equal(await ensureOutputLocation(join(root,'report'),[source]),join(root,'report'));
+    assert.equal(await ensureOutputLocation(join(root,'report'),[source]),join(await realpath(root),'report'));
   }finally{await rm(root,{recursive:true,force:true});}
 });
 test('preserves existing output files without overwriting a report',async()=>{
@@ -33,7 +33,7 @@ test('writes a complete validated JSON report, HTML and one log per actual cell'
   const {root,source}=await setup();try {
     const input=report();input.cells[3].log='<script>globalThis.injected=true</script>\n';
     const target=join(root,'nested','report');const output=await writeArtifacts(input,target,'zh',[source]);
-    assert.equal(output.outputDir,target);assert.deepEqual(JSON.parse(await readFile(output.json,'utf8')),input);
+    assert.equal(output.outputDir,await realpath(target));assert.deepEqual(JSON.parse(await readFile(output.json,'utf8')),input);
     assert.equal(await readFile(join(target,'logs','pair-0-1.txt'),'utf8'),input.cells[3].log);
     assert.equal((await readdir(join(target,'logs'))).length,5);
     assert.match(await readFile(output.html,'utf8'),/Branch Compare/);
