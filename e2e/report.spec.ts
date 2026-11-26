@@ -42,11 +42,45 @@ test('offline matrix directions, statuses, detail selection, translation and fai
   await page.getByRole('button', { name: '中文', exact: true }).click();
   await expect(page.getByRole('heading', { name: '分支组合检查', exact: true })).toBeVisible();
   await expect(page.locator('#detail-title')).toContainText('feature/docs-update → feature/lower-quota');
-  await page.locator('#failed-only').check();
+  await page.getByRole('combobox', { name: '显示' }).selectOption('attention');
   await expect(page.locator('[data-cell-id]:visible')).toHaveCount(6);
   await expect(page.locator('[data-cell-id="pair-2-1"]')).toBeVisible();
-  await page.locator('#failed-only').uncheck();
+  await page.getByRole('combobox', { name: '显示' }).selectOption({ label: '交互失败' });
+  await expect(page.locator('[data-cell-id]:visible')).toHaveCount(1);
+  await expect(page.locator('#filter-count')).toContainText('1 / 10');
+  await expect(page.locator('#detail-id')).toHaveText('pair-0-1');
+  await expect(page.locator('#bash-command')).toHaveValue(/--cell pair-0-1 /);
+  await page.getByRole('button', { name: 'English', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Show' })).toHaveValue('interactions');
+  await page.getByRole('combobox', { name: 'Show' }).selectOption('all');
   await expect(page.locator('[data-cell-id]:visible')).toHaveCount(10);
+});
+
+test('an all-passing report hides replay details for empty filters and restores a selection', async ({ page }) => {
+  const report = reportFixture();
+  for (const cell of report.cells) {
+    cell.status = 'passed';
+    cell.exitCode = 0;
+    cell.interactionFailure = false;
+    cell.conflictPaths = [];
+  }
+  const path = join(directory, 'all-passed.html');
+  await writeFile(path, renderReportHtml(report), 'utf8');
+  await page.goto(pathToFileURL(path).href);
+
+  const filter = page.getByRole('combobox', { name: 'Show' });
+  for (const value of ['attention', 'interactions']) {
+    await filter.selectOption(value);
+    await expect(page.locator('#filter-count')).toContainText('0 / 10');
+    await expect(page.locator('[data-cell-id]:visible')).toHaveCount(0);
+    await expect(page.getByText('No checks match this filter.')).toBeVisible();
+    await expect(page.locator('#detail-id')).toBeHidden();
+    await expect(page.locator('#copy-bash')).toBeHidden();
+  }
+  await filter.selectOption('all');
+  await expect(page.locator('[data-cell-id="base"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#detail-id')).toHaveText('base');
+  await expect(page.locator('#copy-bash')).toBeVisible();
 });
 
 test('copy fallback selects text, explains file clipboard limitations and redacted command', async ({ page }) => {

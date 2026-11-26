@@ -1,6 +1,6 @@
 # Branch Compare
 
-Find Git branches that pass their tests alone and fail when combined. Branch Compare runs a baseline, each candidate branch, and every ordered pair in disposable worktrees, then produces an offline English/Chinese comparison report.
+Find Git branches that pass their tests alone and fail when combined. Branch Compare runs a baseline, each candidate branch, and every ordered pair in disposable worktrees, then produces an offline English/Chinese report that can filter for failing combinations.
 
 [English](README.md) · [简体中文](README_ZH.md) · [Quick start](#quick-start) · [Scan your branches](#scan-your-branches) · [Reproduce](#reproduce-a-result)
 
@@ -64,7 +64,7 @@ Every cell starts at the fixed baseline commit. Single cells merge one candidate
 
 A cell is labeled **Interaction failure** when the baseline and both corresponding single branches pass, and the pair's test command exits unsuccessfully. Merge conflicts, timeouts, and execution errors keep their own statuses. Pairwise checks describe two-branch interactions; run a final integration test for a combination of three or more branches.
 
-Select a cell to inspect its merge/test log, conflict paths, elapsed time, test exit code, input commit SHAs, and resulting Git tree SHA. The report also provides a failure filter, keyboard navigation, language switching, and commands for replaying a selected check.
+Select a cell to inspect its merge/test log, conflict paths, elapsed time, test exit code, input commit SHAs, and resulting Git tree SHA. Use **Show → Interaction failures** to see only the merge orders that fail after both branches pass alone. Choose **Needs attention** to include conflicts, timeouts, and pending checks, or **All checks** to restore the full matrix. The details and replay commands follow the visible selection.
 
 ## Reproduce a result
 
