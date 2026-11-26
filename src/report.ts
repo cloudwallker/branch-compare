@@ -44,13 +44,16 @@ export function renderReportHtml(report: ScanReport, locale: Locale = 'en'): str
   <div class="report-grid">
     <section id="matrix-section" class="panel matrix-panel" aria-labelledby="matrix-title" tabindex="-1">
       <div class="panel-heading"><div><h2 id="matrix-title"></h2><p id="matrix-subtitle" class="muted"></p></div></div>
-      <div class="matrix-controls"><label class="filter"><input id="failed-only" type="checkbox"><span id="filter-label"></span></label><span id="filter-count" class="muted" aria-live="polite"></span></div>
+      <div class="matrix-controls"><label class="filter"><span id="filter-label"></span>
+        <select id="result-filter"><option id="filter-all" value="all"></option><option id="filter-attention" value="attention"></option><option id="filter-interactions" value="interactions"></option></select></label><span id="filter-count" class="muted" aria-live="polite"></span></div>
       <div id="matrix-scroll" class="matrix-scroll" tabindex="0" role="region" aria-label="Scrollable comparison matrix / 可滚动组合矩阵"><table id="matrix"></table></div>
       <div id="status-legend" class="status-legend"></div>
       <p id="scope-note" class="scope-note"></p>
     </section>
     <section class="panel detail-panel" aria-labelledby="detail-heading">
       <div class="panel-heading"><div><p id="detail-eyebrow" class="eyebrow"></p><h2 id="detail-heading"></h2></div><span id="detail-id" class="cell-id"></span></div>
+      <p id="empty-detail" class="empty-detail muted" hidden></p>
+      <div id="selected-check">
       <h3 id="detail-title" class="detail-title"></h3><div id="detail-status" class="detail-status"></div>
       <dl id="detail-meta" class="detail-meta"></dl>
       <details class="sha-details" open><summary id="sha-title"></summary><div id="detail-shas"></div></details>
@@ -61,6 +64,7 @@ export function renderReportHtml(report: ScanReport, locale: Locale = 'en'): str
         <div class="command-block"><label for="powershell-command">PowerShell</label><textarea id="powershell-command" readonly spellcheck="false" rows="3"></textarea><button id="copy-powershell" class="copy-button" type="button"></button></div>
         <p id="copy-feedback" class="copy-feedback" role="status" aria-live="polite"></p>
       </section>
+      </div>
     </section>
   </div>
   <footer id="report-footer"></footer>
