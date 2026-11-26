@@ -6,7 +6,7 @@ import { parseCli,helpText } from './arguments.ts';
 import { getExitCode,validateReport } from './model.ts';
 import { resolveRepository,runScan } from './runner.ts';
 import { ensureOutputLocation,writeArtifacts } from './output.ts';
-import { redactText } from './redact.ts';
+import { limitLog, redactText } from './redact.ts';
 import type { ScanReport,ScanOptions } from './types.ts';
 
 async function readReport(path:string):Promise<ScanReport> {
@@ -55,10 +55,11 @@ export async function main(input:string[]):Promise<number> {
       report.base={...recorded.base};report.refs=recorded.refs.map(r=>({...r}));
       const previous=recorded.cells.find(c=>c.id===args.cell)!,current=report.cells.find(c=>c.id===args.cell)!;
       if(previous.treeSha&&current.treeSha&&previous.treeSha!==current.treeSha){
-        current.status='error';current.interactionFailure=false;current.log='Replayed tree differs from the recorded tree.\n'+current.log;
-        // Keep the shared log size limit even when adding replay diagnostics.
-        while(Buffer.byteLength(current.log)>262144)current.log=current.log.slice(0,-256);
-        current.logTruncated=true;
+        current.status = 'error';
+        current.interactionFailure = false;
+        const bounded = limitLog('Replayed tree differs from the recorded tree.\n' + current.log);
+        current.log = bounded.log;
+        current.logTruncated ||= bounded.logTruncated;
       }
     }
     const files=await writeArtifacts(report,target,args.locale,protectedPaths);

@@ -51,6 +51,29 @@ test('actual CLI finds a no-conflict interaction and replays pinned commits afte
     const overridden=JSON.parse(await readFile(join(root,'override-replay','report.json'),'utf8'));
     assert.equal(overridden.cells.find((c:any)=>c.id==='pair-0-2').treeSha,selected.treeSha);
     assert.equal(overridden.commandRedacted,false);
+
+    const mismatchedFile = join(root, 'mismatched-tree.json');
+    const differentTree = selected.treeSha === '0'.repeat(40) ? '1'.repeat(40) : '0'.repeat(40);
+    const mismatchedCells = report.cells.map((cell: any) =>
+      cell.id === selected.id ? { ...cell, treeSha: differentTree } : cell);
+    await writeFile(mismatchedFile, JSON.stringify({ ...report, cells: mismatchedCells }));
+    for (const largeLog of [false, true]) {
+      const mismatchOut = join(root, largeLog ? 'large-mismatch-replay' : 'mismatch-replay');
+      const mismatchArgs = [
+        'reproduce', '--repo', repo, '--report', mismatchedFile, '--cell', selected.id, '--out', mismatchOut,
+      ];
+      if (largeLog) mismatchArgs.push('--', process.execPath, '-e', "process.stdout.write('x'.repeat(300000))");
+      const mismatch = cli(mismatchArgs);
+      assert.equal(mismatch.status, 2, mismatch.stderr);
+      const mismatchReport = JSON.parse(await readFile(join(mismatchOut, 'report.json'), 'utf8'));
+      const mismatchCell = mismatchReport.cells.find((cell: any) => cell.id === selected.id);
+      assert.equal(mismatchCell.status, 'error');
+      assert.equal(mismatchCell.treeSha, selected.treeSha);
+      assert.match(mismatchCell.log, /^Replayed tree differs from the recorded tree\.\n/);
+      assert.equal(mismatchCell.logTruncated, largeLog);
+      if (largeLog) assert.equal(Buffer.byteLength(mismatchCell.log), 256 * 1024);
+    }
+
     const second=cli(args);assert.equal(second.status,2);assert.deepEqual(JSON.parse(await readFile(join(out,'report.json'),'utf8')),report);
   }finally{await rm(root,{recursive:true,force:true});}
 });
